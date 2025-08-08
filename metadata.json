@@ -1,5 +1,6 @@
 {
   "name": "Panel de Administrador de Pastelería",
   "description": "Un panel de administrador para gestionar productos de una pastelería, como pasteles, panes y especiales. Permite agregar, editar y eliminar productos.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "prompt": ""
 }

@@ -1,35 +1,35 @@
 
-
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/auth';
-import 'firebase/compat/firestore';
+import * as firebaseApp from "firebase/app";
+import * as firebaseAuth from "firebase/auth";
+import * as firestore from "firebase/firestore";
 import { firebaseConfig } from '../config';
 import { Product, ProductFormData, Category } from '../types';
 import { uploadImage } from './cloudinaryService';
 
-// Re-export User type for other components.
-export type User = firebase.User;
+// --- INITIALIZE FIREBASE (v9+ modular syntax) ---
+const app = firebaseApp.initializeApp(firebaseConfig);
+const auth = firebaseAuth.getAuth(app);
+const db = firestore.getFirestore(app);
 
+const productsCollectionRef = firestore.collection(db, "products");
+const categoriesCollectionRef = firestore.collection(db, "categories");
 
-// --- INITIALIZE FIREBASE (v8 compat syntax) ---
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+// Re-export User type and FirebaseError for other components.
+export type User = firebaseAuth.User;
+export const FirebaseError = firebaseApp.FirebaseError;
 
-const productsCollectionRef = db.collection("products");
-const categoriesCollectionRef = db.collection("categories");
 
 // --- AUTHENTICATION ---
 export const login = (email, password) => {
-    return auth.signInWithEmailAndPassword(email, password);
+  return firebaseAuth.signInWithEmailAndPassword(auth, email, password);
 };
 
 export const logout = () => {
-    return auth.signOut();
+  return firebaseAuth.signOut(auth);
 };
 
 export const onAuthChange = (callback: (user: User | null) => void) => {
-    return auth.onAuthStateChanged(callback);
+  return firebaseAuth.onAuthStateChanged(auth, callback);
 };
 
 // --- CATEGORY MANAGEMENT ---
@@ -38,14 +38,13 @@ export const onAuthChange = (callback: (user: User | null) => void) => {
  * Fetches all categories from Firestore.
  */
 export const getCategories = async (): Promise<Category[]> => {
-    const q = categoriesCollectionRef.orderBy("name");
-    const querySnapshot = await q.get();
+    const q = firestore.query(categoriesCollectionRef, firestore.orderBy("name"));
+    const querySnapshot = await firestore.getDocs(q);
     const categories = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
     })) as Category[];
     
-    // Ensure default categories exist if the collection is empty
     if (categories.length === 0) {
         console.log("No categories found, creating default ones...");
         return await createDefaultCategories();
@@ -60,14 +59,13 @@ export const addCategory = async (name: string): Promise<Category> => {
     const normalizedName = name.trim();
     if (!normalizedName) throw new Error("El nombre de la categoría no puede estar vacío.");
 
-    // Check if category already exists (case-insensitive)
-    const q = categoriesCollectionRef.where("name", "==", normalizedName);
-    const existingSnapshot = await q.get();
+    const q = firestore.query(categoriesCollectionRef, firestore.where("name", "==", normalizedName));
+    const existingSnapshot = await firestore.getDocs(q);
     if (!existingSnapshot.empty) {
         throw new Error(`La categoría "${normalizedName}" ya existe.`);
     }
 
-    const docRef = await categoriesCollectionRef.add({ name: normalizedName });
+    const docRef = await firestore.addDoc(categoriesCollectionRef, { name: normalizedName });
     return { id: docRef.id, name: normalizedName };
 };
 
@@ -78,14 +76,17 @@ export const addCategory = async (name: string): Promise<Category> => {
 const createDefaultCategories = async (): Promise<Category[]> => {
     const defaultCategories = ["Pasteles", "Panes", "Especiales"];
     const createdCategories: Category[] = [];
-    
-    // Using a loop to add one by one to easily get the new doc IDs.
-    // A batch write would be faster but doesn't return the generated IDs.
+    const batch = firestore.writeBatch(db);
+
     for (const catName of defaultCategories) {
-        const docRef = await categoriesCollectionRef.add({ name: catName });
+        const docRef = firestore.doc(categoriesCollectionRef); // Create a new doc reference with a unique ID
+        batch.set(docRef, { name: catName });
         createdCategories.push({ id: docRef.id, name: catName });
     }
-    return createdCategories;
+    
+    await batch.commit();
+    // Re-sort by name as batch order isn't guaranteed
+    return createdCategories.sort((a, b) => a.name.localeCompare(b.name));
 };
 
 
@@ -95,8 +96,8 @@ const createDefaultCategories = async (): Promise<Category[]> => {
  * Fetches all products from Firestore.
  */
 export const getProducts = async (): Promise<Product[]> => {
-  const q = productsCollectionRef.orderBy("name");
-  const querySnapshot = await q.get();
+  const q = firestore.query(productsCollectionRef, firestore.orderBy("name"));
+  const querySnapshot = await firestore.getDocs(q);
   return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
 };
 
@@ -104,10 +105,8 @@ export const getProducts = async (): Promise<Product[]> => {
  * Adds a new product to Firestore.
  */
 export const addProduct = async (productData: ProductFormData & { imageFile: File }): Promise<Product> => {
-  // 1. Upload image to Cloudinary
   const imageUrl = await uploadImage(productData.imageFile);
 
-  // 2. Prepare data for Firestore (excluding imageFile)
   const dataToSave = {
     name: productData.name,
     description: productData.description,
@@ -116,8 +115,7 @@ export const addProduct = async (productData: ProductFormData & { imageFile: Fil
     imageUrl: imageUrl,
   };
 
-  // 3. Save to Firestore
-  const docRef = await productsCollectionRef.add(dataToSave);
+  const docRef = await firestore.addDoc(productsCollectionRef, dataToSave);
   return { id: docRef.id, ...dataToSave };
 };
 
@@ -125,19 +123,16 @@ export const addProduct = async (productData: ProductFormData & { imageFile: Fil
  * Updates an existing product in Firestore.
  */
 export const updateProduct = async (productId: string, updateData: Partial<ProductFormData> & { imageFile?: File }): Promise<void> => {
-    const productRef = db.collection('products').doc(productId);
+    const productRef = firestore.doc(db, 'products', productId);
     const { imageFile, ...productFields } = updateData;
-    // Use 'any' for dataToUpdate to handle dynamic properties for Firestore update.
     const dataToUpdate: { [key: string]: any } = { ...productFields };
 
-    // 1. If there's a new image, upload it and add its URL to the update object
     if (imageFile) {
         dataToUpdate.imageUrl = await uploadImage(imageFile);
     }
     
-    // 2. Save to Firestore only if there's something to update
     if (Object.keys(dataToUpdate).length > 0) {
-        await productRef.update(dataToUpdate);
+        await firestore.updateDoc(productRef, dataToUpdate);
     }
 };
 
@@ -145,7 +140,6 @@ export const updateProduct = async (productId: string, updateData: Partial<Produ
  * Deletes a product from Firestore.
  */
 export const deleteProduct = async (productId: string): Promise<void> => {
-  // In a real app, you should also delete the associated image from Cloudinary.
-  const productRef = db.collection('products').doc(productId);
-  await productRef.delete();
+  const productRef = firestore.doc(db, 'products', productId);
+  await firestore.deleteDoc(productRef);
 };

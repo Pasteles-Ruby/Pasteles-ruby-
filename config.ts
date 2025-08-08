@@ -3,6 +3,12 @@
 // Rellena esta configuración con tus propias credenciales de Firebase y Cloudinary.
 
 /**
+ * El único email autorizado para acceder al panel de administrador.
+ * Déjalo como una cadena vacía ('') para permitir que cualquier usuario de Firebase inicie sesión.
+ */
+export const adminEmail = "pasteleriaruby880@gmail.com";
+
+/**
  * Configuración de Firebase.
  * Obtén estos valores desde la configuración de tu proyecto en la consola de Firebase.
  */

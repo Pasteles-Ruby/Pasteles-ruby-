@@ -1,44 +1,67 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, useEffect } from 'react';
 import * as firebaseService from '../services/firebaseService';
+import { FirebaseError } from '../services/firebaseService';
 import Spinner from './Spinner';
 import { CakeIcon } from './icons';
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/auth';
+import { adminEmail } from '../config'; // Importar el email del admin
 
 interface LoginProps {
   onLoginSuccess: () => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
-  // Pre-fill with example credentials to guide the user.
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Auto-fill password when admin email is entered
+  useEffect(() => {
+    if (adminEmail && email.toLowerCase() === adminEmail.toLowerCase()) {
+      setPassword('Pasteles1234@');
+    } else {
+      setPassword('');
+    }
+  }, [email]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+
+    // --- RESTRICCIÓN DE ACCESO ---
+    // Si hay un adminEmail configurado, solo permitir ese email.
+    if (adminEmail && email.toLowerCase() !== adminEmail.toLowerCase()) {
+      setError('Acceso denegado. Este email no está autorizado.');
+      setIsLoading(false);
+      return;
+    }
+    // --- FIN DE RESTRICCIÓN ---
+
     try {
       await firebaseService.login(email, password);
       onLoginSuccess();
     } catch (err) {
       let errorMessage = 'Ocurrió un error inesperado.';
-      if (err instanceof firebase.FirebaseError) {
+      if (err instanceof FirebaseError) {
         switch (err.code) {
+          case 'auth/invalid-credential':
           case 'auth/user-not-found':
           case 'auth/wrong-password':
-          case 'auth/invalid-credential':
             errorMessage = 'Usuario o contraseña incorrectos.';
             break;
           case 'auth/invalid-email':
             errorMessage = 'El formato del email no es válido.';
             break;
+          case 'auth/too-many-requests':
+            errorMessage = 'Acceso bloqueado: Demasiados intentos fallidos. Por seguridad, espera unos minutos antes de volver a intentarlo.';
+            break;
           default:
             errorMessage = 'Error al iniciar sesión. Revisa la consola para más detalles.';
             console.error("Firebase Login Error:", err);
         }
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
       }
       setError(errorMessage);
     } finally {
@@ -68,7 +91,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Usuario (Email)</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Correo</label>
             <input
               type="email"
               id="email"
@@ -102,7 +125,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           </button>
         </form>
         <p className="text-xs text-center text-gray-500 dark:text-gray-400 pt-2">
-            Utiliza las credenciales (email/contraseña) del usuario que creaste en la consola de Firebase.
+            {adminEmail ? 'Solo el administrador autorizado puede acceder.' : 'Utiliza las credenciales (email/contraseña) del usuario que creaste en la consola de Firebase.'}
         </p>
       </div>
       <style>{`

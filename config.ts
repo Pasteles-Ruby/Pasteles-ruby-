@@ -24,11 +24,30 @@ export const firebaseConfig = {
 
 /**
  * Configuración de Cloudinary.
- * Obtén estos valores desde tu panel de control de Cloudinary.
+ * Sigue los pasos en los comentarios para configurar la subida de imágenes.
  */
 export const cloudinaryConfig = {
-  cloudName: "TU_CLOUD_NAME_DE_CLOUDINARY",
-  // Crea un "unsigned upload preset" en la configuración de Cloudinary
-  // para permitir la subida de imágenes sin necesidad de una firma del backend.
-  uploadPreset: "TU_UPLOAD_PRESET_DE_CLOUDINARY" 
+  /**
+   * Tu "Cloud Name" de Cloudinary.
+   * 1. Inicia sesión en tu cuenta de Cloudinary.
+   * 2. En el "Dashboard" principal, busca el campo "Cloud Name".
+   * 3. Copia y pégalo aquí en lugar de "TU_CLOUD_NAME_AQUI".
+   * @example "mi-pasteleria-cloud"
+   */
+  cloudName: "dgfjb8syc",
+
+  /**
+   * Tu "Upload Preset" (sin firma).
+   * Es esencial que sea "unsigned" para que la app pueda subir imágenes de forma segura sin claves secretas.
+   * CÓMO CREARLO:
+   * 1. En Cloudinary, ve a "Settings" (el ícono de engranaje).
+   * 2. Ve a la pestaña "Upload".
+   * 3. Abajo, en la sección "Upload presets", haz clic en "Add upload preset".
+   * 4. Cambia el "Signing Mode" de "Signed" a "Unsigned".
+   * 5. Dale un nombre si quieres (opcional).
+   * 6. Haz clic en "Save" en la parte superior.
+   * 7. Copia el nombre del "Upload preset" que acabas de crear y pégalo aquí en lugar de "TU_UPLOAD_PRESET_AQUI".
+   * @example "ml_default"
+   */
+  uploadPreset: "ylg5ckfc" 
 };

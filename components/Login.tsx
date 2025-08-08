@@ -1,4 +1,5 @@
-import React, { useState, FormEvent, useEffect } from 'react';
+
+import React, { useState, FormEvent } from 'react';
 import * as firebaseService from '../services/firebaseService';
 import { FirebaseError } from '../services/firebaseService';
 import Spinner from './Spinner';
@@ -14,15 +15,6 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  // Auto-fill password when admin email is entered
-  useEffect(() => {
-    if (adminEmail && email.toLowerCase() === adminEmail.toLowerCase()) {
-      setPassword('Pasteles1234@');
-    } else {
-      setPassword('');
-    }
-  }, [email]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -48,7 +40,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           case 'auth/invalid-credential':
           case 'auth/user-not-found':
           case 'auth/wrong-password':
-            errorMessage = 'Usuario o contraseña incorrectos.';
+            errorMessage = 'Usuario o contraseña incorrectos. Por favor, verifica que la contraseña sea la misma que estableciste en Firebase. Puedes restablecerla desde la consola de Firebase si es necesario.';
             break;
           case 'auth/invalid-email':
             errorMessage = 'El formato del email no es válido.';

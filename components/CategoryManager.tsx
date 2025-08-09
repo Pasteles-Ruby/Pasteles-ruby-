@@ -1,3 +1,4 @@
+
 import React, { useState, FormEvent } from 'react';
 import { Category } from '../types';
 import * as firebaseService from '../services/firebaseService';
@@ -33,12 +34,12 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ categories, onCategor
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
-      <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Gestionar Categorías</h2>
+    <div className="bg-white p-6 rounded-xl shadow-md mb-8">
+      <h2 className="text-xl font-bold text-gray-800 mb-4">Gestionar Categorías</h2>
       
       <div className="flex flex-wrap gap-2 mb-4">
         {categories.map(cat => (
-          <span key={cat.id} className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-sm font-medium px-3 py-1 rounded-full">
+          <span key={cat.id} className="bg-gray-200 text-gray-800 text-sm font-medium px-3 py-1 rounded-full">
             {cat.name}
           </span>
         ))}
@@ -53,7 +54,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ categories, onCategor
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
             placeholder="Nombre de la nueva categoría"
-            className="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+            className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
             />
         </div>
         <button

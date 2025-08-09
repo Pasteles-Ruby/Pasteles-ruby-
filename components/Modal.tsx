@@ -18,7 +18,7 @@ const Modal: React.FC<ModalProps> = ({ onClose, children }) => {
       className="fixed inset-0 bg-black bg-opacity-60 z-40 flex justify-center items-center p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 animate-fade-in-up">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 animate-fade-in-up">
         {children}
       </div>
       <style>{`

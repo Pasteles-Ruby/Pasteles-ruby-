@@ -16,7 +16,7 @@ const Spinner: React.FC<SpinnerProps> = ({ size = 'md' }) => {
         <div 
             className={`
                 ${sizeClasses[size]} 
-                border-pink-500 
+                border-red-600
                 border-t-transparent 
                 rounded-full 
                 animate-spin

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Product, Category } from './types';
 import * as firebaseService from './services/firebaseService';
@@ -7,8 +8,8 @@ import ProductForm from './components/ProductForm';
 import Modal from './components/Modal';
 import Spinner from './components/Spinner';
 import Login from './components/Login';
-import CategoryManager from './components/CategoryManager';
 import { AddIcon } from './components/icons';
+import CategoryManager from './components/CategoryManager';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -97,7 +98,7 @@ const App: React.FC = () => {
 
   if (isAuthLoading) {
       return (
-        <div className="min-h-screen flex justify-center items-center bg-gray-100 dark:bg-gray-900">
+        <div className="min-h-screen flex justify-center items-center bg-stone-100">
             <Spinner size="lg" />
         </div>
       );
@@ -108,20 +109,20 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans">
+    <div className="min-h-screen bg-stone-100 text-gray-800 font-sans">
       <Header onLogout={handleLogout} />
       <main className="container mx-auto p-4 md:p-8">
-        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Gestión de Productos</h1>
+        <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+          <h1 className="text-3xl font-bold text-gray-800">Gestión de Productos</h1>
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg shadow-md hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50 transition-transform transform hover:scale-105"
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 transition-transform transform hover:scale-105"
           >
             <AddIcon />
             <span>Agregar Producto</span>
           </button>
         </div>
-
+        
         <CategoryManager categories={categories} onCategoryAdded={fetchData} />
         
         {isLoading ? (
@@ -129,24 +130,24 @@ const App: React.FC = () => {
             <Spinner />
           </div>
         ) : error ? (
-          <div className="text-center p-8 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg">
-            <p className="text-xl">{error}</p>
+          <div className="text-center p-8 bg-red-100 text-red-700 rounded-lg">
+            <p>{error}</p>
           </div>
         ) : (
           <ProductList products={products} onEdit={handleOpenModal} onDelete={handleDelete} />
         )}
+        
+        {isModalOpen && (
+            <Modal onClose={handleCloseModal}>
+                <ProductForm
+                    product={editingProduct}
+                    categories={categories}
+                    onClose={handleCloseModal}
+                    onSaveSuccess={handleSaveSuccess}
+                />
+            </Modal>
+        )}
       </main>
-
-      {isModalOpen && (
-        <Modal onClose={handleCloseModal}>
-          <ProductForm
-            product={editingProduct}
-            categories={categories}
-            onClose={handleCloseModal}
-            onSaveSuccess={handleSaveSuccess}
-          />
-        </Modal>
-      )}
     </div>
   );
 };
